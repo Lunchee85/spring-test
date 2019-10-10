@@ -6,6 +6,6 @@ ARG JAR_FILE=target/test-0.0.1-SNAPSHOT.jar
 
 EXPOSE 8080
 
-ADD ${JAR_FILE} canarysampleappspring.jar
+ADD ${JAR_FILE} canarysampleappbla.jar
 
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/canarysampleappspring.jar"]
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/canarysampleappbla.jar"]
