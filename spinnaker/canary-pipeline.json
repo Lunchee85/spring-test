@@ -1,0 +1,268 @@
+{
+  "name": "Canary Deploy",
+  "application": "springtest",
+  "appConfig": {},
+  "description": "This pipeline deploys a canary version of the application, and a baseline (identical to production) version.\nIt compares them, and if the canary is OK, it triggers the production deployment pipeline.",
+  "executionEngine": "v2",
+  "keepWaitingPipelines": false,
+  "lastModifiedBy": "anonymous",
+  "limitConcurrent": true,
+  "parallel": true,
+  "stages": [
+    {
+      "account": "spinnaker-install-account",
+      "cloudProvider": "kubernetes",
+      "expectedArtifacts": [],
+      "manifestArtifactAccount": "embedded-artifact",
+      "manifests": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "Deployment",
+          "metadata": {
+            "labels": {
+              "app": "springtest-canary"
+            },
+            "name": "springtest-canary",
+            "namespace": "default"
+          },
+          "spec": {
+            "replicas": 1,
+            "selector": {
+              "matchLabels": {
+                "app": "springtest",
+                "version": "canary"
+              }
+            },
+            "template": {
+              "metadata": {
+                "annotations": {
+                  "prometheus.io/scrape": "true"
+                },
+                "labels": {
+                  "app": "springtest",
+                  "version": "canary"
+                }
+              },
+              "spec": {
+                "containers": [
+                  {
+                    "image": "gcr.io/stocazzo-666/springtest:latest",
+                    "name": "springtest",
+                    "ports": [
+                      {
+                        "containerPort": 8090
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "moniker": {
+        "app": "springtest"
+      },
+      "name": "Deploy Canary",
+      "refId": "3",
+      "relationships": {
+        "loadBalancers": [],
+        "securityGroups": []
+      },
+      "requisiteStageRefIds": [
+        "8"
+      ],
+      "source": "text",
+      "type": "deployManifest"
+    },
+    {
+      "account": "spinnaker-install-account",
+      "cloudProvider": "kubernetes",
+      "manifestArtifactAccount": "embedded-artifact",
+      "manifestArtifactId": "0ac4fa1a-4629-4901-94a5-c5579c775736",
+      "manifests": [
+        {
+          "apiVersion": "apps/v1",
+          "kind": "Deployment",
+          "metadata": {
+            "labels": {
+              "app": "springtest-baseline"
+            },
+            "name": "springtest-baseline",
+            "namespace": "default"
+          },
+          "spec": {
+            "replicas": 1,
+            "selector": {
+              "matchLabels": {
+                "app": "springtest",
+                "version": "baseline"
+              }
+            },
+            "template": {
+              "metadata": {
+                "annotations": {
+                  "prometheus.io/scrape": "true"
+                },
+                "labels": {
+                  "app": "springtest",
+                  "version": "baseline"
+                }
+              },
+              "spec": {
+                "containers": [
+                  {
+                    "image": "gcr.io/stocazzo-666/springtest:1.0.0",
+                    "name": "springtest",
+                    "ports": [
+                      {
+                        "containerPort": 8090
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "moniker": {
+        "app": "springtest"
+      },
+      "name": "Deploy Baseline",
+      "refId": "4",
+      "relationships": {
+        "loadBalancers": [],
+        "securityGroups": []
+      },
+      "requisiteStageRefIds": [
+        "8"
+      ],
+      "source": "text",
+      "type": "deployManifest"
+    },
+    {
+      "application": "springtest",
+      "comments": "",
+      "executionOptions": {
+        "successful": true
+      },
+      "name": "Find Baseline Version",
+      "pipeline": "SIMPLE_DEPLOY_PIPELINE_ID",
+      "refId": "8",
+      "requisiteStageRefIds": [],
+      "type": "findArtifactFromExecution"
+    },
+    {
+      "application": "springtest",
+      "comments": "",
+      "failPipeline": true,
+      "name": "Deploy to Production",
+      "pipeline": "SIMPLE_DEPLOY_PIPELINE_ID",
+      "pipelineParameters": {
+        "successRate": "${ parameters.successRate }"
+      },
+      "refId": "9",
+      "requisiteStageRefIds": [
+        "15"
+      ],
+      "stageEnabled": {
+        "expression": "${ #stage('Manual Judgment')['status'].toString() == 'SUCCEEDED'}",
+        "type": "expression"
+      },
+      "type": "pipeline",
+      "waitForCompletion": true
+    },
+    {
+      "account": "spinnaker-install-account",
+      "cloudProvider": "kubernetes",
+      "kinds": [
+        "Deployment"
+      ],
+      "labelSelectors": {
+        "selectors": [
+          {
+            "key": "app",
+            "kind": "EQUALS",
+            "values": [
+              "springtest-canary"
+            ]
+          }
+        ]
+      },
+      "location": "default",
+      "name": "Delete Canary",
+      "options": {
+        "cascading": true
+      },
+      "refId": "12",
+      "requisiteStageRefIds": [
+        "15"
+      ],
+      "type": "deleteManifest"
+    },
+    {
+      "account": "spinnaker-install-account",
+      "cloudProvider": "kubernetes",
+      "kinds": [
+        "Deployment"
+      ],
+      "labelSelectors": {
+        "selectors": [
+          {
+            "key": "app",
+            "kind": "EQUALS",
+            "values": [
+              "springtest-baseline"
+            ]
+          }
+        ]
+      },
+      "location": "default",
+      "name": "Delete Baseline",
+      "options": {
+        "cascading": true
+      },
+      "refId": "13",
+      "requisiteStageRefIds": [
+        "15"
+      ],
+      "type": "deleteManifest"
+    },
+    {
+      "name": "Successful deployment",
+      "preconditions": [
+        {
+          "context": {
+            "expression": "${ #stage('Manual Judgment')['status'].toString() == 'SUCCEEDED'}"
+          },
+          "failPipeline": true,
+          "type": "expression"
+        }
+      ],
+      "refId": "14",
+      "requisiteStageRefIds": [
+        "9",
+        "12",
+        "13"
+      ],
+      "type": "checkPreconditions"
+    },
+    {
+      "completeOtherBranchesThenFail": false,
+      "continuePipeline": true,
+      "failPipeline": false,
+      "judgmentInputs": [],
+      "name": "Manual Judgment",
+      "notifications": [],
+      "refId": "15",
+      "requisiteStageRefIds": [
+        "3",
+        "4"
+      ],
+      "type": "manualJudgment"
+    }
+  ],
+  "triggers": [],
+  "updateTs": "1533572826000"
+}

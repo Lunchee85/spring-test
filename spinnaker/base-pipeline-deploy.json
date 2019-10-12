@@ -1,23 +1,46 @@
 {
-  "name": "Simple deploy",
-  "application": "springtest",
-  "appConfig": {},
-  "description": "This pipeline deploys the app, simple and easy.",
-  "executionEngine": "v2",
+  "expectedArtifacts": [
+    {
+      "defaultArtifact": {
+        "customKind": true,
+        "id": "0a9218d8-0e75-406b-84e6-6d3181130de1"
+      },
+      "displayName": "spring-tets",
+      "id": "046369cb-83c8-431e-adbb-d352ad3a9b5e",
+      "matchArtifact": {
+        "id": "a15e24e4-546f-4e11-aa50-5301472b7f15",
+        "name": "gcr.io/stocazzo-666/springtest",
+        "type": "docker/image"
+      },
+      "useDefaultArtifact": false,
+      "usePriorArtifact": true
+    }
+  ],
   "keepWaitingPipelines": false,
   "lastModifiedBy": "anonymous",
   "limitConcurrent": true,
-  "parallel": true,
+  "parameterConfig": [],
   "stages": [
     {
       "account": "spinnaker-install-account",
       "cloudProvider": "kubernetes",
-      "kinds": [],
-      "labelSelectors": {
-        "selectors": []
-      },
-      "location": "",
-      "manifestArtifactAccount": "embedded-artifact",
+      "expectedArtifacts": [
+        {
+          "defaultArtifact": {
+            "customKind": true,
+            "id": "0fd7292b-e077-4582-955f-b30a480d8a7f"
+          },
+          "displayName": "witty-gecko-3",
+          "id": "1e005266-9878-4f66-ad0b-72d7cafe2e0f",
+          "matchArtifact": {
+            "customKind": true,
+            "id": "d0bbb321-ba30-4ff8-b215-5f5e6a498069",
+            "type": "embedded/base64"
+          },
+          "useDefaultArtifact": false,
+          "usePriorArtifact": false
+        }
+      ],
       "manifests": [
         {
           "apiVersion": "extensions/v1beta1",
@@ -114,21 +137,37 @@
         }
       ],
       "moniker": {
-        "app": "sampleapp"
+        "app": "springtest"
       },
-      "name": "Deploy",
-      "options": {
-        "cascading": true
-      },
+      "name": "Deploy (Manifest)",
       "refId": "1",
       "relationships": {
         "loadBalancers": [],
         "securityGroups": []
       },
+      "requisiteStageRefIds": [],
       "source": "text",
+      "trafficManagement": {
+        "enabled": false,
+        "options": {
+          "enableTraffic": false,
+          "services": []
+        }
+      },
       "type": "deployManifest"
     }
   ],
-  "triggers": [],
-  "updateTs": "1531749445000"
+  "triggers": [
+    {
+      "attributeConstraints": {},
+      "enabled": true,
+      "payloadConstraints": {
+        "status": "SUCCESS"
+      },
+      "pubsubSystem": "google",
+      "subscriptionName": "gcb-account",
+      "type": "pubsub"
+    }
+  ],
+  "updateTs": "1570892590157"
 }
