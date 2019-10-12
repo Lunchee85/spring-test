@@ -3,5 +3,5 @@ steps:
     entrypoint: 'mvn'
     args: ['clean', 'install', '-DskipTests']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/canary-spinnaker-test/springtest', '.']
-images: ['gcr.io/canary-spinnaker-test/springtest']
+    args: ['build', '-t', 'gcr.io/stocazzo-666/springtest', '.']
+images: ['gcr.io/stocazzo-666/springtest']
